@@ -32,7 +32,6 @@ public class AppFrame extends JFrame {
 
     void initializeTopPane() {
         JPanel topPanel = new JPanel();
-        topPanel.setBackground(Color.red);
         topPanel.setLayout(new GridBagLayout());
         slider = initializeSlider();
         addComponentListener(new ComponentAdapter() {
@@ -64,12 +63,6 @@ public class AppFrame extends JFrame {
         }
         slider.setLabelTable(labelTable);
         slider.setPaintLabels(true);
-        slider.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
-
-        UIManager.put("Slider.thumb", Color.RED);
-        UIManager.put("Slider.track", Color.GREEN);
-        UIManager.put("Slider.highlight", Color.BLUE);
-        UIManager.put("Slider.tickColor", Color.BLACK);
 
 
         return slider;
@@ -77,14 +70,14 @@ public class AppFrame extends JFrame {
 
     void initializeCenterPane() {
         JPanel centerPane = new JPanel(new GridBagLayout());
-        centerPane.setBackground(Color.blue);
-
 
         threadPriorityField1 = initPriorityField();
         threadPriorityField2 = initPriorityField();
-        startThreadsBtn = new JButton("Start");
+        initStartButton(centerPane);
+
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5); // Add some padding
+        gbc.insets = new Insets(5, 5, 5, 5);
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -100,6 +93,17 @@ public class AppFrame extends JFrame {
 
         add(centerPane, BorderLayout.CENTER);
     }
+
+    private void initStartButton(JPanel panel) {
+        startThreadsBtn= new JButton("Start");
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        startThreadsBtn.setPreferredSize(new Dimension(210, 50));
+        panel.add(startThreadsBtn, gbc);
+    }
+
     private JSpinner initPriorityField() {
         SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 10, 1);
         Dimension preferredSize = new Dimension(100, 30);
