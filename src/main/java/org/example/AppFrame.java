@@ -2,6 +2,7 @@ package org.example;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Hashtable;
 
 public class AppFrame extends JFrame {
     JLabel titleLabel;
@@ -19,7 +20,7 @@ public class AppFrame extends JFrame {
 
 
         titleLabel = new JLabel("Welcome!");
-        slider = new JSlider(JSlider.VERTICAL);
+        slider = initializeSlider();
         threadTextField1 = new JTextField(30);
         threadTextField2 = new JTextField(30);
         startThread1Btn = new JButton("Start 1");
@@ -34,6 +35,19 @@ public class AppFrame extends JFrame {
         add(startThread2Btn);
 
         setVisible(true);
+    }
+
+    private JSlider initializeSlider() {
+        JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 100 ,50);
+        slider.setMajorTickSpacing(10);
+        slider.setPaintTicks(true);
+        Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
+        for (int i = 0; i <= 100; i += 10) {
+            labelTable.put(i, new JLabel(i + ""));
+        }
+        slider.setLabelTable(labelTable);
+        slider.setPaintLabels(true);
+        return slider;
     }
 
 }
