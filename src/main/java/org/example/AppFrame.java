@@ -34,6 +34,7 @@ public class AppFrame extends JFrame {
         add(startThread1Btn);
         add(startThread2Btn);
 
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 
