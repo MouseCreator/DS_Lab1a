@@ -10,14 +10,16 @@ public class AppFrame extends JFrame {
     JLabel titleLabel;
     JSlider slider;
     JSpinner threadPriorityField1;
+    BlockingVariableThreadFactory blockingVariableThreadFactory = new BlockingVariableThreadFactory();
     JSpinner threadPriorityField2;
     JButton startThreadsBtn;
+    private final ThreadCompetition taskAThreadCompetition;
+    private final ThreadCompetition taskBThreadCompetition;
 
-    private final ThreadCompetition threadCompetition;
-
-    public AppFrame(ThreadCompetition threadCompetition) {
+    public AppFrame() {
         super("Lab1");
-        this.threadCompetition = threadCompetition;
+        this.taskAThreadCompetition = new SimpleThreadCompetition();
+        this.taskBThreadCompetition = new SimpleThreadCompetition();
         setSize(640, 480);
         setMinimumSize(new Dimension(640, 480));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -27,6 +29,8 @@ public class AppFrame extends JFrame {
 
         initializeTopPane();
         initializeCenterPane();
+
+        add(initBTaskPanel(), BorderLayout.SOUTH);
 
         centralizeFrame();
         setVisible(true);
@@ -106,13 +110,13 @@ public class AppFrame extends JFrame {
 
         startThreadsBtn.addActionListener(e -> {
             slider.setEnabled(false);
-            if (threadCompetition.isRunning()) {
+            if (taskAThreadCompetition.isRunning()) {
                 return;
             }
 
-            threadCompetition.setThread(0, getThread1());
-            threadCompetition.setThread(1, getThread2());
-            threadCompetition.startAll();
+            taskAThreadCompetition.setThread(0, getThread1());
+            taskAThreadCompetition.setThread(1, getThread2());
+            taskAThreadCompetition.startAll();
 
         });
     }
@@ -132,6 +136,48 @@ public class AppFrame extends JFrame {
         JSpinner jSpinner = new JSpinner(model);
         jSpinner.setPreferredSize(preferredSize);
         return jSpinner;
+    }
+
+    private JPanel initBTaskPanel() {
+        JButton start1 = new JButton("Start 1");
+        start1.addActionListener(e -> runLowerThread());
+
+        JButton start2 = new JButton("Start 2");
+        start2.addActionListener(e -> runUpperThread());
+
+        JButton stop1 = new JButton("Stop 1");
+        stop1.addActionListener(e -> stopLowerThread());
+
+        JButton stop2 = new JButton("Stop 2");
+        stop2.addActionListener(e -> stopUpperThread());
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(2, 2));
+        panel.add(start1);
+        panel.add(start2);
+        panel.add(stop1);
+        panel.add(stop2);
+
+        return panel;
+    }
+
+    private void runUpperThread() {
+        Thread upperThread = blockingVariableThreadFactory.getUpperThread(slider, 10, Thread.MAX_PRIORITY);
+        taskBThreadCompetition.setThread(0, upperThread);
+        upperThread.start();
+    }
+
+    private void runLowerThread() {
+        Thread upperThread = blockingVariableThreadFactory.getLowerThread(slider, 90, Thread.MIN_PRIORITY);
+        taskBThreadCompetition.setThread(1, upperThread);
+        upperThread.start();
+    }
+
+    private void stopUpperThread() {
+        taskBThreadCompetition.stop(0);
+    }
+    private void stopLowerThread() {
+        taskBThreadCompetition.stop(1);
     }
 
 }

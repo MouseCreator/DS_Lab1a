@@ -13,6 +13,11 @@ public class SimpleThreadCompetition implements ThreadCompetition {
     }
 
     @Override
+    public boolean isRunning(int threadIndex) {
+        return isRunning();
+    }
+
+    @Override
     public void start(int threadIndex) {
         Thread thread = threads[threadIndex];
         if (thread != null) {
