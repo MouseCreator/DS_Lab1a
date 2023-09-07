@@ -13,8 +13,11 @@ public class AppFrame extends JFrame {
     JSpinner threadPriorityField2;
     JButton startThreadsBtn;
 
-    public AppFrame() {
+    private final ThreadCompetition threadCompetition;
+
+    public AppFrame(ThreadCompetition threadCompetition) {
         super("Lab1");
+        this.threadCompetition = threadCompetition;
         setSize(640, 480);
         setMinimumSize(new Dimension(640, 480));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -24,7 +27,6 @@ public class AppFrame extends JFrame {
 
         initializeTopPane();
         initializeCenterPane();
-
 
         centralizeFrame();
         setVisible(true);
@@ -64,12 +66,12 @@ public class AppFrame extends JFrame {
         slider.setLabelTable(labelTable);
         slider.setPaintLabels(true);
 
-
         return slider;
     }
 
     void initializeCenterPane() {
         JPanel centerPane = new JPanel(new GridBagLayout());
+
 
         threadPriorityField1 = initPriorityField();
         threadPriorityField2 = initPriorityField();
@@ -95,18 +97,39 @@ public class AppFrame extends JFrame {
     }
 
     private void initStartButton(JPanel panel) {
-        startThreadsBtn= new JButton("Start");
+        startThreadsBtn = new JButton("Start");
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.CENTER;
         startThreadsBtn.setPreferredSize(new Dimension(210, 50));
         panel.add(startThreadsBtn, gbc);
+
+        startThreadsBtn.addActionListener(e -> {
+            slider.setEnabled(false);
+            if (threadCompetition.isRunning()) {
+                return;
+            }
+
+            threadCompetition.setThread(0, getThread1());
+            threadCompetition.setThread(1, getThread2());
+            threadCompetition.startAll();
+
+        });
+    }
+
+    private Thread getThread1() {
+        SliderMoveThreadFactory factory = new SliderMoveThreadFactory();
+        return factory.getUpperThread(slider, 10, (int) threadPriorityField1.getValue());
+    }
+    private Thread getThread2() {
+        SliderMoveThreadFactory factory = new SliderMoveThreadFactory();
+        return factory.getLowerThread(slider, 90, (int) threadPriorityField2.getValue());
     }
 
     private JSpinner initPriorityField() {
         SpinnerNumberModel model = new SpinnerNumberModel(1, 1, 10, 1);
-        Dimension preferredSize = new Dimension(100, 30);
+        Dimension preferredSize = new Dimension(100, 40);
         JSpinner jSpinner = new JSpinner(model);
         jSpinner.setPreferredSize(preferredSize);
         return jSpinner;
