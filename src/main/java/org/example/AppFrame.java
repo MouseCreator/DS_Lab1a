@@ -72,7 +72,6 @@ public class AppFrame extends JFrame {
     void initializeCenterPane() {
         JPanel centerPane = new JPanel(new GridBagLayout());
 
-
         threadPriorityField1 = initPriorityField();
         threadPriorityField2 = initPriorityField();
         initStartButton(centerPane);

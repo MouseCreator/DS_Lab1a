@@ -3,7 +3,7 @@ package org.example;
 import javax.swing.*;
 import java.util.function.Predicate;
 
-public class SliderMoveThreadFactory {
+public class SliderMoveThreadFactory implements SliderThreadFactory {
     private static final Object obj = new Object();
     private static final int DELAY = 100;
     private Thread getThread(JSlider slider, Predicate<Integer> canMove, int delta, int priority) {
@@ -17,12 +17,11 @@ public class SliderMoveThreadFactory {
                     try {
                         Thread.sleep(DELAY);
                     } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+                        e.printStackTrace();
                     }
                 }
             }
         });
-        thread.setDaemon(true);
         thread.setPriority(priority);
         return thread;
     }
