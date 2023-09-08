@@ -16,7 +16,8 @@ public class SimpleThreadCompetition implements ThreadCompetition {
 
     @Override
     public boolean isRunning(int threadIndex) {
-        return isRunning();
+        Thread thread = threads[threadIndex];
+        return thread != null && thread.isAlive();
     }
 
     @Override
