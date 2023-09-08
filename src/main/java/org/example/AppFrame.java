@@ -7,17 +7,15 @@ import java.awt.event.ComponentEvent;
 import java.util.Hashtable;
 
 public class AppFrame extends JFrame {
-    JLabel titleLabel;
-    JSlider slider;
-    JSpinner threadPriorityField1;
-    JSpinner threadPriorityField2;
-    JButton startThreadsBtn;
-    JButton stopAllThreadsBtn;
-    JButton start1;
-    JButton start2;
-    JButton stop1;
-    JButton stop2;
-    Label statusLabel;
+    private JSlider slider;
+    private JSpinner threadPriorityField1;
+    private JSpinner threadPriorityField2;
+    private JButton startThreadsBtn;
+    private JButton start1;
+    private JButton start2;
+    private JButton stop1;
+    private JButton stop2;
+    private Label statusLabel;
     private final ThreadGUIManager threadGUIManager = new ThreadGUIManager();
     BlockingVariableThreadFactory blockingVariableThreadFactory = new BlockingVariableThreadFactory();
     private final ThreadCompetition taskAThreadCompetition;
@@ -31,9 +29,6 @@ public class AppFrame extends JFrame {
         setMinimumSize(new Dimension(640, 480));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-
-        titleLabel = new JLabel("Welcome!");
-
 
         initGuiManager();
         initializeTopPane();
@@ -115,7 +110,7 @@ public class AppFrame extends JFrame {
         centerPane.add(startThreadsBtn, gbc);
         gbc.gridx = 0;
         gbc.gridy = 3;
-        stopAllThreadsBtn = initStopBtn();
+        JButton stopAllThreadsBtn = initStopBtn();
 
         centerPane.add(stopAllThreadsBtn, gbc);
 
