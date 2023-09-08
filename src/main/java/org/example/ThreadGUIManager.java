@@ -27,4 +27,5 @@ public class ThreadGUIManager {
         if (onCompetitionChange != null)
             onCompetitionChange.run();
     }
+
 }
