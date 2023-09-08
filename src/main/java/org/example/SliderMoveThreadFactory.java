@@ -17,7 +17,7 @@ public class SliderMoveThreadFactory implements SliderThreadFactory {
                     try {
                         Thread.sleep(DELAY);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        return;
                     }
                 }
             }

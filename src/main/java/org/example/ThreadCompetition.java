@@ -6,6 +6,6 @@ public interface ThreadCompetition {
     void start(int threadIndex);
     void startAll();
     void stop(int threadIndex);
-    void stopAll(int threadIndex);
+    void stopAll();
     void setThread(int index, Thread thread);
 }

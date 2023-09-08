@@ -2,6 +2,8 @@ package org.example;
 
 public class SimpleThreadCompetition implements ThreadCompetition {
     private final Thread[] threads = new Thread[2];
+    public static final int UPPER = 0;
+    public static final int LOWER = 1;
     @Override
     public boolean isRunning() {
         for (Thread thread : threads) {
@@ -43,7 +45,7 @@ public class SimpleThreadCompetition implements ThreadCompetition {
     }
 
     @Override
-    public void stopAll(int threadIndex) {
+    public void stopAll() {
         for (Thread thread : threads) {
             if (thread != null) {
                 thread.interrupt();
