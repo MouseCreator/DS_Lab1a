@@ -11,7 +11,6 @@ public class AppFrame extends JFrame {
     JLabel titleLabel;
     JSlider slider;
     JSpinner threadPriorityField1;
-
     JSpinner threadPriorityField2;
     JButton startThreadsBtn;
     JButton stopAllThreadsBtn;
@@ -62,9 +61,6 @@ public class AppFrame extends JFrame {
             }
         });
         topPanel.add(slider);
-
-        statusLabel = new Label("Slider is free");
-        topPanel.add(statusLabel);
         add(topPanel, BorderLayout.NORTH);
     }
 
@@ -93,35 +89,44 @@ public class AppFrame extends JFrame {
         threadPriorityField1 = initPriorityField();
         threadPriorityField2 = initPriorityField();
 
-        JPanel buttonsPanel = new JPanel();
-        initStartButton(buttonsPanel);
-        initStopBtn(buttonsPanel);
-        buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
         gbc.gridx = 0;
         gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        statusLabel = new Label("Slider is free");
+        statusLabel.setAlignment(Label.CENTER);
+        centerPane.add(statusLabel, gbc);
+
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
         centerPane.add(threadPriorityField1, gbc);
 
         gbc.gridx = 1;
         centerPane.add(threadPriorityField2, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         gbc.gridwidth = 2;
-        centerPane.add(buttonsPanel, gbc);
+
+        startThreadsBtn = initStartButton();
+        centerPane.add(startThreadsBtn, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        stopAllThreadsBtn = initStopBtn();
+
+        centerPane.add(stopAllThreadsBtn, gbc);
 
         add(centerPane, BorderLayout.CENTER);
     }
 
-    private void initStartButton(JPanel panel) {
-        startThreadsBtn = new JButton("Start");
-        startThreadsBtn.setPreferredSize(new Dimension(210, 50));
-        panel.add(startThreadsBtn);
+    private JButton initStartButton() {
+        JButton button = new JButton("Start");
+        button.setPreferredSize(new Dimension(210, 50));
 
-        startThreadsBtn.addActionListener(e -> {
+        button.addActionListener(e -> {
             if (taskAThreadCompetition.isRunning()) {
                 return;
             }
@@ -133,6 +138,7 @@ public class AppFrame extends JFrame {
             taskAThreadCompetition.startAll();
 
         });
+        return button;
     }
 
     private void setTaskBEnabled(boolean b) {
@@ -145,12 +151,11 @@ public class AppFrame extends JFrame {
         startThreadsBtn.setEnabled(b);
     }
 
-    private void initStopBtn(JPanel panel) {
-        stopAllThreadsBtn = new JButton("Stop");
-        stopAllThreadsBtn.setPreferredSize(new Dimension(210, 50));
-        panel.add(stopAllThreadsBtn);
+    private JButton initStopBtn() {
+        JButton button = new JButton("Stop");
+        button.setPreferredSize(new Dimension(210, 50));
 
-        stopAllThreadsBtn.addActionListener(e -> {
+        button.addActionListener(e -> {
 
             taskAThreadCompetition.stopAll();
             taskBThreadCompetition.stopAll();
@@ -161,6 +166,7 @@ public class AppFrame extends JFrame {
             statusLabel.setText("Slider is free");
 
         });
+        return button;
     }
 
     private Thread getThread1() {
@@ -181,6 +187,7 @@ public class AppFrame extends JFrame {
     }
 
     private JPanel initBTaskPanel() {
+
         start1 = new JButton("Start 1");
         start1.addActionListener(e -> runUpperThread());
 
@@ -291,7 +298,7 @@ public class AppFrame extends JFrame {
                 }
             });
             thread.setPriority(priority);
-            thread.setName("Upper thread");
+            thread.setName("Thread 1");
             return thread;
         }
         public Thread getLowerThread(int target, int priority) {
@@ -318,7 +325,7 @@ public class AppFrame extends JFrame {
             });
 
             thread.setPriority(priority);
-            thread.setName("Lower thread");
+            thread.setName("Thread 2");
             return thread;
         }
     }
@@ -347,13 +354,13 @@ public class AppFrame extends JFrame {
         public Thread getUpperThread(int target, int priority) {
             Thread thread = getThread(t->t>target, -1);
             thread.setPriority(priority);
-            thread.setName("Upper thread");
+            thread.setName("Thread 1");
             return thread;
         }
         public Thread getLowerThread(int target, int priority) {
             Thread thread = getThread(t->t<target, 1);
             thread.setPriority(priority);
-            thread.setName("Lower thread");
+            thread.setName("Thread 2");
             return thread;
         }
     }
