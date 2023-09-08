@@ -14,6 +14,11 @@ public class AppFrame extends JFrame {
     JSpinner threadPriorityField2;
     JButton startThreadsBtn;
     JButton stopAllThreadsBtn;
+
+    JButton start1;
+    JButton start2;
+    JButton stop1;
+    JButton stop2;
     private final ThreadCompetition taskAThreadCompetition;
     private final ThreadCompetition taskBThreadCompetition;
 
@@ -109,10 +114,11 @@ public class AppFrame extends JFrame {
         panel.add(startThreadsBtn);
 
         startThreadsBtn.addActionListener(e -> {
-            slider.setEnabled(false);
             if (taskAThreadCompetition.isRunning()) {
                 return;
             }
+            setTaskBEnabled(false);
+            setTaskAEnabled(false);
 
             taskAThreadCompetition.setThread(SimpleThreadCompetition.UPPER, getThread1());
             taskAThreadCompetition.setThread(SimpleThreadCompetition.LOWER, getThread2());
@@ -120,16 +126,29 @@ public class AppFrame extends JFrame {
 
         });
     }
+
+    private void setTaskBEnabled(boolean b) {
+        start1.setEnabled(b);
+        start2.setEnabled(b);
+        stop1.setEnabled(b);
+        stop2.setEnabled(b);
+    }
+    private void setTaskAEnabled(boolean b) {
+        startThreadsBtn.setEnabled(b);
+    }
+
     private void initStopBtn(JPanel panel) {
         stopAllThreadsBtn = new JButton("Stop");
         stopAllThreadsBtn.setPreferredSize(new Dimension(210, 50));
         panel.add(stopAllThreadsBtn);
 
         stopAllThreadsBtn.addActionListener(e -> {
-            slider.setEnabled(true);
 
             taskAThreadCompetition.stopAll();
             taskBThreadCompetition.stopAll();
+
+            setTaskBEnabled(true);
+            setTaskAEnabled(true);
 
         });
     }
@@ -152,16 +171,16 @@ public class AppFrame extends JFrame {
     }
 
     private JPanel initBTaskPanel() {
-        JButton start1 = new JButton("Start 1");
+        start1 = new JButton("Start 1");
         start1.addActionListener(e -> runLowerThread());
 
-        JButton start2 = new JButton("Start 2");
+        start2 = new JButton("Start 2");
         start2.addActionListener(e -> runUpperThread());
 
-        JButton stop1 = new JButton("Stop 1");
+        stop1 = new JButton("Stop 1");
         stop1.addActionListener(e -> stopLowerThread());
 
-        JButton stop2 = new JButton("Stop 2");
+        stop2 = new JButton("Stop 2");
         stop2.addActionListener(e -> stopUpperThread());
 
         JPanel panel = new JPanel();
@@ -178,12 +197,18 @@ public class AppFrame extends JFrame {
         Thread upperThread = blockingVariableThreadFactory.getUpperThread(slider, 10, Thread.MIN_PRIORITY);
         taskBThreadCompetition.setThread(SimpleThreadCompetition.UPPER, upperThread);
         taskBThreadCompetition.start(SimpleThreadCompetition.UPPER);
+        start2.setEnabled(false);
+        stop1.setEnabled(false);
+        setTaskAEnabled(false);
     }
 
     private void runLowerThread() {
-        Thread upperThread = blockingVariableThreadFactory.getLowerThread(slider, 90, Thread.MAX_PRIORITY);
-        taskBThreadCompetition.setThread(SimpleThreadCompetition.LOWER, upperThread);
+        Thread lowerThread = blockingVariableThreadFactory.getLowerThread(slider, 90, Thread.MAX_PRIORITY);
+        taskBThreadCompetition.setThread(SimpleThreadCompetition.LOWER, lowerThread);
         taskBThreadCompetition.start(SimpleThreadCompetition.LOWER);
+        start1.setEnabled(false);
+        stop2.setEnabled(false);
+        setTaskAEnabled(false);
     }
 
     private void stopUpperThread() {
