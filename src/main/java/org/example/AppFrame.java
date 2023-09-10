@@ -18,13 +18,13 @@ public class AppFrame extends JFrame {
     private Label statusLabel;
     private final ThreadGUIManager threadGUIManager = new ThreadGUIManager();
     BlockingVariableThreadFactory blockingVariableThreadFactory = new BlockingVariableThreadFactory();
-    private final ThreadCompetition taskAThreadCompetition;
-    private final ThreadCompetition taskBThreadCompetition;
+    private final ThreadCompetitionManager taskAThreadCompetition;
+    private final ThreadCompetitionManager taskBThreadCompetition;
 
     public AppFrame() {
         super("Lab1");
-        this.taskAThreadCompetition = new SimpleThreadCompetition();
-        this.taskBThreadCompetition = new SimpleThreadCompetition();
+        this.taskAThreadCompetition = new SimpleThreadCompetitionManager();
+        this.taskBThreadCompetition = new SimpleThreadCompetitionManager();
         setSize(640, 480);
         setMinimumSize(new Dimension(640, 480));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -81,9 +81,9 @@ public class AppFrame extends JFrame {
         JPanel centerPane = new JPanel(new GridBagLayout());
 
         threadPriorityField1 = initPriorityField();
-        threadPriorityField1.addChangeListener(e -> taskAThreadCompetition.changePriority(SimpleThreadCompetition.UPPER, (int)threadPriorityField1.getValue()));
+        threadPriorityField1.addChangeListener(e -> taskAThreadCompetition.changePriority(SimpleThreadCompetitionManager.UPPER, (int)threadPriorityField1.getValue()));
         threadPriorityField2 = initPriorityField();
-        threadPriorityField2.addChangeListener(e -> taskAThreadCompetition.changePriority(SimpleThreadCompetition.LOWER, (int)threadPriorityField2.getValue()));
+        threadPriorityField2.addChangeListener(e -> taskAThreadCompetition.changePriority(SimpleThreadCompetitionManager.LOWER, (int)threadPriorityField2.getValue()));
 
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -130,8 +130,8 @@ public class AppFrame extends JFrame {
             setTaskBEnabled(false);
             setTaskAEnabled(false);
 
-            taskAThreadCompetition.setThread(SimpleThreadCompetition.UPPER, getThread1());
-            taskAThreadCompetition.setThread(SimpleThreadCompetition.LOWER, getThread2());
+            taskAThreadCompetition.setThread(SimpleThreadCompetitionManager.UPPER, getThread1());
+            taskAThreadCompetition.setThread(SimpleThreadCompetitionManager.LOWER, getThread2());
             taskAThreadCompetition.startAll();
 
         });
@@ -209,55 +209,53 @@ public class AppFrame extends JFrame {
 
     private void runUpperThread() {
         Thread upperThread = blockingVariableThreadFactory.getUpperThread(10, Thread.MIN_PRIORITY);
-        taskBThreadCompetition.setThread(SimpleThreadCompetition.UPPER, upperThread);
+        taskBThreadCompetition.setThread(SimpleThreadCompetitionManager.UPPER, upperThread);
         start1.setEnabled(false);
         stop2.setEnabled(false);
         setTaskAEnabled(false);
-        taskBThreadCompetition.start(SimpleThreadCompetition.UPPER);
+        taskBThreadCompetition.start(SimpleThreadCompetitionManager.UPPER);
 
     }
 
     private void runLowerThread() {
         Thread lowerThread = blockingVariableThreadFactory.getLowerThread(90, Thread.MAX_PRIORITY);
-        taskBThreadCompetition.setThread(SimpleThreadCompetition.LOWER, lowerThread);
+        taskBThreadCompetition.setThread(SimpleThreadCompetitionManager.LOWER, lowerThread);
         start2.setEnabled(false);
         stop1.setEnabled(false);
         setTaskAEnabled(false);
-        taskBThreadCompetition.start(SimpleThreadCompetition.LOWER);
+        taskBThreadCompetition.start(SimpleThreadCompetitionManager.LOWER);
     }
 
     private void stopUpperThread() {
-        taskBThreadCompetition.stop(SimpleThreadCompetition.UPPER);
+        taskBThreadCompetition.stop(SimpleThreadCompetitionManager.UPPER);
     }
     private void stopLowerThread() {
-        taskBThreadCompetition.stop(SimpleThreadCompetition.LOWER);
+        taskBThreadCompetition.stop(SimpleThreadCompetitionManager.LOWER);
     }
 
     private void initGuiManager() {
         threadGUIManager.setOnUpperFinished(()-> {
             start1.setEnabled(true);
             stop2.setEnabled(true);
-
-            if (!taskBThreadCompetition.isRunning(SimpleThreadCompetition.LOWER)) {
-                setTaskAEnabled(true);
+            if (taskBThreadCompetition.isRunning(SimpleThreadCompetitionManager.LOWER))
                 statusLabel.setText("Slider is free");
-            }
         });
         threadGUIManager.setOnLowerFinished(()-> {
             start2.setEnabled(true);
             stop1.setEnabled(true);
-
-            if (!taskBThreadCompetition.isRunning(SimpleThreadCompetition.UPPER)) {
-                setTaskAEnabled(true);
+            if (taskBThreadCompetition.isRunning(SimpleThreadCompetitionManager.UPPER))
                 statusLabel.setText("Slider is free");
-            }
         });
         threadGUIManager.setOnCompetitionChange(()-> statusLabel.setText("Slider under control of thread: " + Thread.currentThread().getName()));
     }
 
     private class BlockingVariableThreadFactory implements SliderThreadFactory {
-        private final static int DELAY = 100;
         public static int semaphore = 1;
+
+        /**
+         *
+         * @return true if thread successfully acquired resource
+         */
         synchronized boolean acquireResource() {
             if (semaphore == 0) {
                 return false;
@@ -265,6 +263,10 @@ public class AppFrame extends JFrame {
             semaphore--;
             return true;
         }
+
+        /**
+         * Releases resource, occupied by thread
+         */
         synchronized void releaseResource() {
             semaphore++;
         }
@@ -287,34 +289,16 @@ public class AppFrame extends JFrame {
         private Thread createThread(int target, Runnable onComplete) {
             return new Thread(()->{
                 if(!acquireResource()) {
-                    statusLabel.setText("Slider is occupied by other thread!");
                     onComplete.run();
+                    statusLabel.setText("Slider is occupied by other thread!");
                     return;
                 }
-                int currentValue;
-                threadGUIManager.onCompetitionChange();
+                threadGUIManager.onSliderMove();
                 try {
-                    while ((currentValue = slider.getValue()) < target) {
-                        if (Thread.interrupted()) {
-                            return;
-                        }
-                        slider.setValue(currentValue + 1);
-                        try {
-                            Thread.sleep(DELAY);
-                        } catch (InterruptedException e) {
-                            return;
-                        }
-                    }
-                    while ((currentValue = slider.getValue()) > target) {
-                        if (Thread.interrupted()) {
-                            return;
-                        }
-                        slider.setValue(currentValue - 1);
-                        try {
-                            Thread.sleep(DELAY);
-                        } catch (InterruptedException e) {
-                            return;
-                        }
+                    SliderMover sliderMover = new SliderMover();
+                    while (sliderMover.canMoveTowards(target)) {
+                        if(sliderMover.moveSliderTowards(target))
+                            break;
                     }
                 } finally {
                     releaseResource();
@@ -326,26 +310,16 @@ public class AppFrame extends JFrame {
 
     class SliderMoveThreadFactory implements SliderThreadFactory {
         private static final Object obj = new Object();
-        private static final int DELAY = 100;
+
         private Thread getThread(int target) {
             return new Thread(()->{
+                SliderMover sliderMover = new SliderMover();
                 while (true) {
 
                     synchronized (obj) {
-                        if (Thread.interrupted())
-                            return;
-                        threadGUIManager.onCompetitionChange();
-                        int prevValue = slider.getValue();
-                        if (prevValue < target) {
-                            slider.setValue(prevValue + 1);
-                        } else if (prevValue > target) {
-                            slider.setValue(prevValue - 1);
-                        }
-                        try {
-                            Thread.sleep(DELAY);
-                        } catch (InterruptedException e) {
-                            return;
-                        }
+                        threadGUIManager.onSliderMove();
+                        if(sliderMover.moveSliderTowards(target))
+                            break;
                     }
                 }
             });
@@ -363,6 +337,43 @@ public class AppFrame extends JFrame {
             thread.setDaemon(true);
             thread.setName("Thread 2");
             return thread;
+        }
+    }
+
+    class SliderMover {
+        private static final int DELAY = 100;
+
+        /**
+         *
+         * @param target - value that slider moves to
+         * @return true if the value has not been reached yet
+         */
+        public boolean canMoveTowards(int target) {
+            return slider.getValue() != target;
+        }
+
+        /**
+         *
+         * @param target - value slider has to move to
+         * @return true if the process is interrupted
+         */
+        public boolean moveSliderTowards(int target) {
+            if (Thread.interrupted()) {
+                return true;
+            }
+            int prevValue = slider.getValue();
+
+            if (prevValue < target) {
+                slider.setValue(prevValue + 1);
+            } else if (prevValue > target) {
+                slider.setValue(prevValue - 1);
+            }
+            try {
+                Thread.sleep(DELAY);
+            } catch (InterruptedException ignored) {
+                return true;
+            }
+            return false;
         }
     }
 
