@@ -167,11 +167,11 @@ public class AppFrame extends JFrame {
     }
 
     private Thread getThread1() {
-        SliderMoveThreadFactory factory = new SliderMoveThreadFactory();
+        SynchronizedSliderMoveThreadsFactory factory = new SynchronizedSliderMoveThreadsFactory();
         return factory.getUpperThread( 10, (int) threadPriorityField1.getValue());
     }
     private Thread getThread2() {
-        SliderMoveThreadFactory factory = new SliderMoveThreadFactory();
+        SynchronizedSliderMoveThreadsFactory factory = new SynchronizedSliderMoveThreadsFactory();
         return factory.getLowerThread(90, (int) threadPriorityField2.getValue());
     }
 
@@ -237,18 +237,48 @@ public class AppFrame extends JFrame {
         threadGUIManager.setOnUpperFinished(()-> {
             start1.setEnabled(true);
             stop2.setEnabled(true);
-            if (taskBThreadCompetition.isRunning(SimpleThreadCompetitionManager.LOWER))
+            if (!taskBThreadCompetition.isRunning(SimpleThreadCompetitionManager.LOWER))
                 statusLabel.setText("Slider is free");
         });
         threadGUIManager.setOnLowerFinished(()-> {
             start2.setEnabled(true);
             stop1.setEnabled(true);
-            if (taskBThreadCompetition.isRunning(SimpleThreadCompetitionManager.UPPER))
+            if (!taskBThreadCompetition.isRunning(SimpleThreadCompetitionManager.UPPER))
                 statusLabel.setText("Slider is free");
         });
         threadGUIManager.setOnCompetitionChange(()-> statusLabel.setText("Slider under control of thread: " + Thread.currentThread().getName()));
     }
+    private class SynchronizedSliderMoveThreadsFactory implements SliderThreadFactory {
+        private static final Object obj = new Object();
 
+        private Thread getThread(int target) {
+            return new Thread(()->{
+                SliderMover sliderMover = new SliderMover();
+                while (true) {
+
+                    synchronized (obj) {
+                        threadGUIManager.onSliderMove();
+                        if(sliderMover.moveSliderTowards(target))
+                            break;
+                    }
+                }
+            });
+        }
+        public Thread getUpperThread(int target, int priority) {
+            Thread thread = getThread(target);
+            thread.setPriority(priority);
+            thread.setDaemon(true);
+            thread.setName("Thread 1");
+            return thread;
+        }
+        public Thread getLowerThread(int target, int priority) {
+            Thread thread = getThread(target);
+            thread.setPriority(priority);
+            thread.setDaemon(true);
+            thread.setName("Thread 2");
+            return thread;
+        }
+    }
     private class BlockingVariableThreadFactory implements SliderThreadFactory {
         public static int semaphore = 1;
 
@@ -268,7 +298,11 @@ public class AppFrame extends JFrame {
          * Releases resource, occupied by thread
          */
         synchronized void releaseResource() {
-            semaphore++;
+            if (semaphore < 1) {
+                semaphore++;
+            } else {
+                throw new RuntimeException("Semaphore error: no resource to release");
+            }
         }
 
         public Thread getUpperThread(int target, int priority) {
@@ -308,45 +342,13 @@ public class AppFrame extends JFrame {
         }
     }
 
-    class SliderMoveThreadFactory implements SliderThreadFactory {
-        private static final Object obj = new Object();
-
-        private Thread getThread(int target) {
-            return new Thread(()->{
-                SliderMover sliderMover = new SliderMover();
-                while (true) {
-
-                    synchronized (obj) {
-                        threadGUIManager.onSliderMove();
-                        if(sliderMover.moveSliderTowards(target))
-                            break;
-                    }
-                }
-            });
-        }
-        public Thread getUpperThread(int target, int priority) {
-            Thread thread = getThread(target);
-            thread.setPriority(priority);
-            thread.setDaemon(true);
-            thread.setName("Thread 1");
-            return thread;
-        }
-        public Thread getLowerThread(int target, int priority) {
-            Thread thread = getThread(target);
-            thread.setPriority(priority);
-            thread.setDaemon(true);
-            thread.setName("Thread 2");
-            return thread;
-        }
-    }
-
-    class SliderMover {
+    private class SliderMover {
         private static final int DELAY = 100;
 
         /**
          *
-         * @param target - value that slider moves to
-         * @return true if the value has not been reached yet
+         * @param target value that slider moves to
+         * @return true if the value has not reached target value yet
          */
         public boolean canMoveTowards(int target) {
             return slider.getValue() != target;
@@ -354,7 +356,7 @@ public class AppFrame extends JFrame {
 
         /**
          *
-         * @param target - value slider has to move to
+         * @param target value slider has to move to
          * @return true if the process is interrupted
          */
         public boolean moveSliderTowards(int target) {
