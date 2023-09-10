@@ -8,4 +8,5 @@ public interface ThreadCompetition {
     void stop(int threadIndex);
     void stopAll();
     void setThread(int index, Thread thread);
+    void changePriority(int lower, int value);
 }

@@ -58,4 +58,12 @@ public class SimpleThreadCompetition implements ThreadCompetition {
     public void setThread(int index, Thread thread) {
         threads[index] = thread;
     }
+
+    @Override
+    public void changePriority(int index, int value) {
+        Thread thread = threads[index];
+        if (thread != null) {
+            thread.setPriority(value);
+        }
+    }
 }

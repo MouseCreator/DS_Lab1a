@@ -81,7 +81,9 @@ public class AppFrame extends JFrame {
         JPanel centerPane = new JPanel(new GridBagLayout());
 
         threadPriorityField1 = initPriorityField();
+        threadPriorityField1.addChangeListener(e -> taskAThreadCompetition.changePriority(SimpleThreadCompetition.UPPER, (int)threadPriorityField1.getValue()));
         threadPriorityField2 = initPriorityField();
+        threadPriorityField2.addChangeListener(e -> taskAThreadCompetition.changePriority(SimpleThreadCompetition.LOWER, (int)threadPriorityField2.getValue()));
 
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -257,30 +259,26 @@ public class AppFrame extends JFrame {
         private final static int DELAY = 100;
         public static int semaphore = 1;
         synchronized boolean acquireResource() {
-            while (semaphore == 0) {
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    return true;
-                }
+            if (semaphore == 0) {
+                return false;
             }
             semaphore--;
-            return false;
+            return true;
         }
         synchronized void releaseResource() {
             semaphore++;
-            notify();
         }
 
         public Thread getUpperThread(int target, int priority) {
             Thread thread = createThread(target, threadGUIManager::onUpperFinished);
             thread.setPriority(priority);
+            thread.setDaemon(true);
             thread.setName("Thread 1");
             return thread;
         }
         public Thread getLowerThread(int target, int priority) {
             Thread thread = createThread(target, threadGUIManager::onLowerFinished);
-
+            thread.setDaemon(true);
             thread.setPriority(priority);
             thread.setName("Thread 2");
             return thread;
@@ -288,8 +286,11 @@ public class AppFrame extends JFrame {
 
         private Thread createThread(int target, Runnable onComplete) {
             return new Thread(()->{
-                if(acquireResource())
+                if(!acquireResource()) {
+                    statusLabel.setText("Slider is occupied by other thread!");
+                    onComplete.run();
                     return;
+                }
                 int currentValue;
                 threadGUIManager.onCompetitionChange();
                 try {
@@ -352,12 +353,14 @@ public class AppFrame extends JFrame {
         public Thread getUpperThread(int target, int priority) {
             Thread thread = getThread(target);
             thread.setPriority(priority);
+            thread.setDaemon(true);
             thread.setName("Thread 1");
             return thread;
         }
         public Thread getLowerThread(int target, int priority) {
             Thread thread = getThread(target);
             thread.setPriority(priority);
+            thread.setDaemon(true);
             thread.setName("Thread 2");
             return thread;
         }
