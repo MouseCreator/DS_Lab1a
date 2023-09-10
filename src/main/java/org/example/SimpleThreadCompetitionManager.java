@@ -1,6 +1,6 @@
 package org.example;
 
-public class SimpleThreadCompetition implements ThreadCompetition {
+public class SimpleThreadCompetitionManager implements ThreadCompetitionManager {
     private final Thread[] threads = new Thread[2];
     public static final int UPPER = 0;
     public static final int LOWER = 1;

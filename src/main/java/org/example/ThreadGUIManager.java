@@ -23,7 +23,7 @@ public class ThreadGUIManager {
         this.onCompetitionChange = toExecute;
     }
 
-    void onCompetitionChange() {
+    void onSliderMove() {
         if (onCompetitionChange != null)
             onCompetitionChange.run();
     }

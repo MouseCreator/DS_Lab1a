@@ -1,6 +1,6 @@
 package org.example;
 
-public interface ThreadCompetition {
+public interface ThreadCompetitionManager {
     boolean isRunning();
     boolean isRunning(int threadIndex);
     void start(int threadIndex);
